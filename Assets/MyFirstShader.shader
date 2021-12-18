@@ -26,7 +26,7 @@ Shader "Unlit/MyFirstShader"
                 return UnityObjectToClipPos(vertex);//将模型坐标变换成矩阵坐标
             }
             fixed4 _Color;// the properties should be defined again here, in order to be used in the shader
-            fixed4 frag( ):SV_TARGET
+            fixed4 frag( ):SV_TARGET//SV_TARGET是系统值，表示该函数返回的是用于下一个阶段输出的颜色值，也就是我们最终输出到显示器上的值。
             {
                 return _Color;
             }
