@@ -52,7 +52,7 @@ Shader "Unlit/MySecondShader"
             }
             /**********************/
 
-
+            
             ENDCG
         }
     }
