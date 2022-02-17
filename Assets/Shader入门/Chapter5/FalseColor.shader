@@ -26,8 +26,8 @@ Shader "Unity Shaders Book/Chapter 5/False Color" {
 				//o.color = fixed4(v.tangent.xyz * 0.5 + fixed3(0.5, 0.5, 0.5), 1.0);
 				
 				// Visualize binormal
-				// fixed3 binormal = cross(v.normal, v.tangent.xyz) * v.tangent.w;
-				// o.color = fixed4(binormal * 0.5 + fixed3(0.5, 0.5, 0.5), 1.0);
+				//fixed3 binormal = cross(v.normal, v.tangent.xyz) * v.tangent.w;
+				//o.color = fixed4(binormal * 0.5 + fixed3(0.5, 0.5, 0.5), 1.0);
 				
 				// Visualize the first set texcoord
 				//o.color = fixed4(v.texcoord.xy, 0.0, 1.0);
@@ -50,7 +50,7 @@ Shader "Unity Shaders Book/Chapter 5/False Color" {
 				// o.color.a = 1.0;
 				
 				// Visualize vertex color
-//				o.color = v.color;
+				//o.color = v.color;
 				
 				return o;
 			}
