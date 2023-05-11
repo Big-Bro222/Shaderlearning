@@ -1,7 +1,8 @@
 Shader "Toon/ToonShaderSurfaceAdvance"
 {
-   //show values to edit in inspector
-    Properties {
+    //show values to edit in inspector
+    Properties
+    {
         [Header(Base Parameters)]
         _Color ("Tint", Color) = (1, 1, 1, 1)
         _BaseColor ("BaseColor", Color)=(1,1,1,1)
@@ -18,14 +19,18 @@ Shader "Toon/ToonShaderSurfaceAdvance"
         _SpecularSize ("Specular Size", Range(0, 1)) = 0.1
         _SpecularFalloff ("Specular Falloff", Range(0, 2)) = 1
     }
-    SubShader {
+    SubShader
+    {
         //the material is completely non-transparent and is rendered at the same time as the other opaque geometry
-        Tags{ "RenderType"="Opaque" "Queue"="Geometry"}
+        Tags
+        {
+            "RenderType"="Opaque" "Queue"="Geometry"
+        }
         Pass
         {
             Name "Outline"
             Cull Front
-            
+
             CGPROGRAM
             #pragma vertex vert
             #pragma fragment frag
@@ -42,45 +47,43 @@ Shader "Toon/ToonShaderSurfaceAdvance"
             struct v2f
             {
                 float4 vertex : SV_POSITION;
-                
             };
-            
+
             float _Outline;
             fixed4 _OutlineColor;
             float _Steps;
             float _ToolEffect;
-            
 
-            v2f vert (appdata_base v)
+
+            v2f vert(appdata_base v)
             {
                 v2f o;
                 //物体法线外扩
                 //v.vertex.xyz+=_Outline*v.normal;
                 //o.vertex = UnityObjectToClipPos(v.vertex);
-                
-                //视角空间法线外拓
-				//float4 pos = mul(UNITY_MATRIX_V, mul(unity_ObjectToWorld, v.vertex));
-				//float3 normal = normalize(mul((float3x3)UNITY_MATRIX_IT_MV,v.normal));
-				//pos = pos + float4(normal,0) * _Outline;
-				//o.vertex =  mul(UNITY_MATRIX_P, pos);
 
-				//裁剪空间法线外拓
-				o.vertex = UnityObjectToClipPos(v.vertex);
-				float3 normal = normalize(mul((float3x3)UNITY_MATRIX_IT_MV,v.normal));
-				float2 viewNormal = TransformViewToProjection(normal.xy);
-				o.vertex.xy += viewNormal * _Outline;
+                //视角空间法线外拓
+                //float4 pos = mul(UNITY_MATRIX_V, mul(unity_ObjectToWorld, v.vertex));
+                //float3 normal = normalize(mul((float3x3)UNITY_MATRIX_IT_MV,v.normal));
+                //pos = pos + float4(normal,0) * _Outline;
+                //o.vertex =  mul(UNITY_MATRIX_P, pos);
+
+                //裁剪空间法线外拓
+                o.vertex = UnityObjectToClipPos(v.vertex);
+                float3 normal = normalize(mul((float3x3)UNITY_MATRIX_IT_MV, v.normal));
+                float2 viewNormal = TransformViewToProjection(normal.xy);
+                o.vertex.xy += viewNormal * _Outline;
                 return o;
             }
 
-            fixed4 frag (v2f i) : SV_Target
+            fixed4 frag(v2f i) : SV_Target
             {
                 return _OutlineColor;
             }
             ENDCG
         }
-   
-        CGPROGRAM
 
+        CGPROGRAM
         //the shader is a surface shader, meaning that it will be extended by unity in the background to have fancy lighting and other features
         //our surface shader function is called surf and we use our custom lighting model
         //fullforwardshadows makes sure unity adds the shadow passes the shader might need
@@ -99,7 +102,8 @@ Shader "Toon/ToonShaderSurfaceAdvance"
         float _SpecularSize;
         float _SpecularFalloff;
 
-        struct ToonSurfaceOutput{
+        struct ToonSurfaceOutput
+        {
             fixed3 Albedo;
             half3 Emission;
             fixed3 Specular;
@@ -108,7 +112,16 @@ Shader "Toon/ToonShaderSurfaceAdvance"
         };
 
         //our lighting function. Will be called once per light
-        float4 LightingStepped(ToonSurfaceOutput s, float3 lightDir, half3 viewDir, float shadowAttenuation){
+        float4 LightingStepped(ToonSurfaceOutput s, float3 lightDir, half3 viewDir, float shadowAttenuation)
+        {
+            float3 shakeOffset = float3(0, 0, 0);
+            shakeOffset.x = sin(_Time.z * 15);
+            shakeOffset.y = sin(_Time.z * 13 + 5);
+            shakeOffset.z = sin(_Time.z * 12 + 7);
+
+            #ifdef POINT
+            lightDir += shakeOffset * 0.1f;
+            #endif
             //how much does the normal point towards the light?
             float towardsLight = dot(s.Normal, lightDir);
 
@@ -129,15 +142,15 @@ Shader "Toon/ToonShaderSurfaceAdvance"
             lightIntensity = lightIntensity / _StepAmount;
             lightIntensity = saturate(lightIntensity);
 
-        #ifdef USING_DIRECTIONAL_LIGHT
+            #ifdef USING_DIRECTIONAL_LIGHT
             //for directional lights, get a hard vut in the middle of the shadow attenuation
             float attenuationChange = fwidth(shadowAttenuation) * 0.5;
             float shadow = smoothstep(0.5 - attenuationChange, 0.5 + attenuationChange, shadowAttenuation);
-        #else
+            #else
             //for other light types (point, spot), put the cutoff near black, so the falloff doesn't affect the range
             float attenuationChange = fwidth(shadowAttenuation);
             float shadow = smoothstep(0, attenuationChange, shadowAttenuation);
-        #endif
+            #endif
             lightIntensity = lightIntensity * shadow;
 
             //calculate how much the surface points points towards the reflection direction
@@ -151,7 +164,8 @@ Shader "Toon/ToonShaderSurfaceAdvance"
 
             //make specular intensity with a hard corner
             float specularChange = fwidth(towardsReflection);
-            float specularIntensity = smoothstep(1 - _SpecularSize, 1 - _SpecularSize + specularChange, towardsReflection);
+            float specularIntensity = smoothstep(1 - _SpecularSize, 1 - _SpecularSize + specularChange,
+                                                 towardsReflection);
             //factor inshadows
             specularIntensity = specularIntensity * shadow;
 
@@ -166,16 +180,18 @@ Shader "Toon/ToonShaderSurfaceAdvance"
 
 
         //input struct which is automatically filled by unity
-        struct Input {
+        struct Input
+        {
             float2 uv_MainTex;
         };
 
         //the surface shader function which sets parameters the lighting function then uses
-        void surf (Input i, inout ToonSurfaceOutput o) {
+        void surf(Input i, inout ToonSurfaceOutput o)
+        {
             //sample and tint albedo texture
             fixed4 col = tex2D(_MainTex, i.uv_MainTex);
             col *= _Color;
-            o.Albedo = col.rgb*_BaseColor;
+            o.Albedo = col.rgb * _BaseColor;
 
             o.Specular = _Specular;
 

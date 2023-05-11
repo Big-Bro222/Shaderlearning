@@ -28,12 +28,12 @@ Shader "Toon/ToonShaderSurface"
 
         //our lighting function. Will be called once per light
         float4 LightingStepped(SurfaceOutput s, float3 lightDir, half3 viewDir, float shadowAttenuation){
+                        
             //how much does the normal point towards the light?
             float towardsLight = dot(s.Normal, lightDir);
             // make the lighting a hard cut
             float towardsLightChange = fwidth(towardsLight);
             float lightIntensity = smoothstep(0, towardsLightChange, towardsLight);
-
         #ifdef USING_DIRECTIONAL_LIGHT
             //for directional lights, get a hard vut in the middle of the shadow attenuation
             float attenuationChange = fwidth(shadowAttenuation) * 0.5;
