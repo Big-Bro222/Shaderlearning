@@ -66,19 +66,22 @@ Shader "Shader105/TwoPass"
 
 				//texture
 				float4 baseColor = tex2D(_MainTex, i.uv) ;
-
+				float3 normal = normalize(i.normal);
 				//ambient 
 				float3 ambient = _LightColor0 * _AmbientStrength;
 
 				//diffuse
-				float3 diff = dot(i.normal,_WorldSpaceLightPos0) * _LightColor0 * _DiffStrength;
+				float NdotL = dot(i.normal, _WorldSpaceLightPos0);
+
+				float3 diff = (NdotL < 0) ? 0 : 1 * _LightColor0 * _DiffStrength;// 把(NdotL < 0) ? 0 : 1 改成ramp 如果需要用自己的texture
 
 				//specular
-				float3 reflectDir = reflect(-_WorldSpaceLightPos0, i.normal);
-				float3 spec = pow(max(dot(i.viewDir, reflectDir), 0.0), _SpecPow) * _LightColor0 * _SpecStrength;
+				float3 reflectDir = reflect(-_WorldSpaceLightPos0, normal);
+				float spec = pow(max(dot(i.viewDir, reflectDir), 0.0), _SpecPow);
+				float3 specSmooth = smoothstep(0.005, 0.01, spec) * _LightColor0 * _SpecStrength;
 				
 				//final color
-				float4 final_color = float4((spec + diff + ambient),1.0)* baseColor* _Brightness;
+				float4 final_color = float4((specSmooth + diff + ambient),1.0)* baseColor* _Brightness;
 				return final_color ;
 			}
 			ENDCG
@@ -161,19 +164,21 @@ Shader "Shader105/TwoPass"
 				float3 ambient = _LightColor0 * _AmbientStrength;
 
 				//diffuse
-				float3 diff = dot(i.normal, light_Dir) * _LightColor0 * _DiffStrength;
+				float NdotL = dot(i.normal, _WorldSpaceLightPos0);
+				float3 diff = (NdotL < 0) ? 0 : 1 * _LightColor0 * _DiffStrength;// 把(NdotL < 0) ? 0 : 1 改成ramp 如果需要用自己的texture
 
 				//specular
 				float3 reflectDir = reflect(-light_Dir, i.normal);
-				float3 spec = pow(max(dot(i.viewDir, reflectDir), 0.0), _SpecPow) * _LightColor0 * _SpecStrength;
+				float spec = pow(max(dot(i.viewDir, reflectDir), 0.0), _SpecPow);
+				float3 specSmooth = smoothstep(0.005, 0.01, spec) * _LightColor0 * _SpecStrength;
 
 				float4 final_color;
 				if (_WorldSpaceLightPos0.w == 0.0) // 0: direcitonal light  1: point light
 				{
-					final_color = float4((spec + diff + ambient), 1.0) * baseColor * _Brightness;
+					final_color = float4((specSmooth + diff + ambient), 1.0) * baseColor * _Brightness;
 				}
 				else {
-					final_color = float4((spec + diff), 1.0) * baseColor * _Brightness * atten;
+					final_color = float4((specSmooth + diff), 1.0) * baseColor * _Brightness * atten;
 				}
 				//final color
 				return final_color;
